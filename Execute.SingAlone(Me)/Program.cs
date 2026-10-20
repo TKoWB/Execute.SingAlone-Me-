@@ -30,21 +30,28 @@ namespace Execute.SingAlone_Me_
             //by: Mili
             //To Be added Sustain++
 
-            string musicFile = "ghost.mp3";
-            var audioRender = new AudioFileReader(musicFile);
-            var songTask = Task.Run(() =>
+            string musicFile = Path.Combine(AppContext.BaseDirectory, "ghost.mp3");
+            Task songTask = Task.CompletedTask;
+            if (File.Exists(musicFile))
             {
-                using (var outputDevice = new WaveOutEvent())
+                songTask = Task.Run(() =>
                 {
-
-                    outputDevice.Init(audioRender);
-                    outputDevice.Play();
-                    while (outputDevice.PlaybackState == PlaybackState.Playing)
+                    using (var audioRender = new AudioFileReader(musicFile))
+                    using (var outputDevice = new WaveOutEvent())
                     {
-                        Thread.Sleep(1);
+                        outputDevice.Init(audioRender);
+                        outputDevice.Play();
+                        while (outputDevice.PlaybackState == PlaybackState.Playing)
+                        {
+                            Thread.Sleep(1);
+                        }
                     }
-                }
-            });
+                });
+            }
+            else
+            {
+                Console.Error.WriteLine($"Audio file not found: {musicFile}. Continuing without music.");
+            }
             var WorldExecute = Task.Run(() =>
             {
                 world.worldExecuteMe();
@@ -57,10 +64,10 @@ namespace Execute.SingAlone_Me_
         }
         public static void readFile(string fileName)
         {
-            string filePath = fileName;
+            string filePath = Path.Combine(AppContext.BaseDirectory, fileName + ".txt");
             try
             {
-                using (StreamReader reader = new StreamReader(filePath + ".txt"))
+                using (StreamReader reader = new StreamReader(filePath))
                 {
                     string line;
                     while ((line = reader.ReadLine()) != null)
